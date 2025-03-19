@@ -5,18 +5,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const caricaturePreview = document.getElementById('caricaturePreview');
     const convertBtn = document.getElementById('convertBtn');
     const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessage = document.getElementById('errorMessage');
 
     // Face-API 모델 로드
     try {
+        loadingIndicator.style.display = 'block';
+        loadingIndicator.querySelector('p').textContent = '얼굴 인식 모델을 로드하는 중...';
+        
+        // 모델 파일 경로 설정
+        const modelPath = window.location.pathname.includes('/') 
+            ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1) + 'models/'
+            : 'models/';
+
         await Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-            faceapi.nets.faceLandmarks68Net.loadFromUri('/models'),
-            faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+            faceapi.nets.tinyFaceDetector.loadFromUri(modelPath),
+            faceapi.nets.faceLandmarks68Net.loadFromUri(modelPath),
+            faceapi.nets.faceRecognitionNet.loadFromUri(modelPath)
         ]);
+        
         console.log('Face-API 모델 로드 완료');
+        loadingIndicator.style.display = 'none';
     } catch (error) {
         console.error('Face-API 모델 로드 실패:', error);
-        alert('얼굴 인식 모델을 로드하는데 실패했습니다. 페이지를 새로고침해주세요.');
+        showError('얼굴 인식 모델을 로드하는데 실패했습니다. 페이지를 새로고침해주세요.');
+        loadingIndicator.style.display = 'none';
     }
 
     // 파일 업로드 박스 클릭 이벤트
@@ -30,9 +42,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 변환 버튼 클릭 이벤트
     convertBtn.addEventListener('click', convertToCaricature);
 
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    }
+
     function handleImageSelect(e) {
         const file = e.target.files[0];
         if (file) {
+            if (!file.type.startsWith('image/')) {
+                showError('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = document.createElement('img');
@@ -41,7 +66,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     originalPreview.innerHTML = '';
                     originalPreview.appendChild(img);
                     convertBtn.disabled = false;
+                    errorMessage.style.display = 'none';
                 };
+                img.onerror = () => {
+                    showError('이미지를 로드하는데 실패했습니다.');
+                };
+            };
+            reader.onerror = () => {
+                showError('파일을 읽는데 실패했습니다.');
             };
             reader.readAsDataURL(file);
         }
@@ -54,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 로딩 표시
         loadingIndicator.style.display = 'block';
         convertBtn.disabled = true;
+        errorMessage.style.display = 'none';
 
         try {
             // 얼굴 감지
@@ -62,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .withFaceDescriptors();
 
             if (detections.length === 0) {
-                alert('이미지에서 얼굴을 찾을 수 없습니다. 다른 사진을 시도해주세요.');
+                showError('이미지에서 얼굴을 찾을 수 없습니다. 다른 사진을 시도해주세요.');
                 return;
             }
 
@@ -111,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             caricaturePreview.appendChild(resultImg);
         } catch (error) {
             console.error('캐리커처 변환 중 오류 발생:', error);
-            alert('이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+            showError('이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
         } finally {
             // 로딩 표시 제거
             loadingIndicator.style.display = 'none';
