@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 얼굴 캐리커처 변환기</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>AI 얼굴 캐리커처 변환기</h1>
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <input type="file" id="imageInput" accept="image/*" hidden>
+                <div class="upload-content">
+                    <img src="camera-icon.svg" alt="카메라 아이콘" class="camera-icon">
+                    <p>사진을 업로드하거나 클릭하여 촬영</p>
+                </div>
+            </div>
+        </div>
+        <div class="preview-section">
+            <div class="image-container">
+                <h3>원본 이미지</h3>
+                <div id="originalPreview" class="preview-box"></div>
+            </div>
+            <div class="image-container">
+                <h3>캐리커처</h3>
+                <div id="caricaturePreview" class="preview-box"></div>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="convertBtn" class="convert-btn" disabled>변환하기</button>
+            <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+                <div class="spinner"></div>
+                <p>얼굴 인식 중...</p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
